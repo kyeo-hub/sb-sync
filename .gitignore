@@ -1,0 +1,19 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+sb-sync
+
+# Configs (Private)
+.sb-sync/
+config.yaml
+
+# Go
+vendor/
+go.sum
+
+# OS
+.DS_Store
+Thumbs.db
