@@ -14,16 +14,19 @@ esac
 
 # Get latest release tag from GitHub API
 REPO="kyeo-hub/sb-sync"
-LATEST_TAG=$(curl -s https://api.github.com/repos/$REPO/releases/latest | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+GH_PROXY="${GH_PROXY:-}" # Allow setting proxy via environment variable
+
+API_URL="${GH_PROXY}https://api.github.com/repos/$REPO/releases/latest"
+LATEST_TAG=$(curl -s "$API_URL" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
 
 if [ -z "$LATEST_TAG" ]; then
-    echo "Failed to fetch latest release tag."
+    echo "Failed to fetch latest release tag from $API_URL."
     exit 1
 fi
 
 EXTENSION="tar.gz"
 FILENAME="sb-sync-${LATEST_TAG}-${OS}-${ARCH}.${EXTENSION}"
-URL="https://github.com/${REPO}/releases/download/${LATEST_TAG}/${FILENAME}"
+URL="${GH_PROXY}https://github.com/${REPO}/releases/download/${LATEST_TAG}/${FILENAME}"
 
 echo "Downloading sb-sync ${LATEST_TAG} for ${OS}/${ARCH}..."
 curl -L "$URL" -o "sb-sync.tar.gz"

@@ -23,6 +23,12 @@
 curl -fsSL https://raw.githubusercontent.com/kyeo-hub/sb-sync/main/install.sh | bash
 ```
 
+**如果遇到 GitHub 访问困难，请使用国内加速命令：**
+
+```bash
+curl -fsSL https://ghproxy.com/https://raw.githubusercontent.com/kyeo-hub/sb-sync/main/install.sh | GH_PROXY=https://ghproxy.com/ bash
+```
+
 ### Windows
 
 请从 [Releases](https://github.com/kyeo-hub/sb-sync/releases) 页面下载最新的 `.zip` 文件，解压并将 `sb-sync.exe` 放入你的系统变量路径中。

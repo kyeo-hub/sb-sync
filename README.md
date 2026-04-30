@@ -23,6 +23,12 @@ Run the following command in your terminal to automatically download and install
 curl -fsSL https://raw.githubusercontent.com/kyeo-hub/sb-sync/main/install.sh | bash
 ```
 
+**If you have trouble accessing GitHub, use the proxy command:**
+
+```bash
+curl -fsSL https://ghproxy.com/https://raw.githubusercontent.com/kyeo-hub/sb-sync/main/install.sh | GH_PROXY=https://ghproxy.com/ bash
+```
+
 ### Windows
 
 Download the latest `.zip` file from the [Releases](https://github.com/kyeo-hub/sb-sync/releases) page, extract it, and place `sb-sync.exe` in your system's PATH.
