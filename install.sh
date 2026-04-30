@@ -12,23 +12,32 @@ case "$ARCH" in
     *) echo "Unsupported architecture: $ARCH"; exit 1 ;;
 esac
 
-# Get latest release tag from GitHub API
+# Get latest release tag
 REPO="kyeo-hub/sb-sync"
-GH_PROXY="${GH_PROXY:-}" # Allow setting proxy via environment variable
+GH_PROXY="${GH_PROXY:-}" 
 
-API_URL="${GH_PROXY}https://api.github.com/repos/$REPO/releases/latest"
-LATEST_TAG=$(curl -s "$API_URL" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/')
+echo "Fetching latest version..."
+# Try to get the tag by following the redirect of the /releases/latest URL
+# This is more proxy-friendly than the GitHub API
+LATEST_TAG=$(curl -sI "${GH_PROXY}https://github.com/${REPO}/releases/latest" | grep -i location | awk -F'/' '{print $NF}' | tr -d '\r' | xargs)
+
+# Fallback to API if the redirect method fails (some proxies don't return Location header correctly)
+if [ -z "$LATEST_TAG" ] || [ "$LATEST_TAG" = "latest" ]; then
+    LATEST_TAG=$(curl -s "https://api.github.com/repos/$REPO/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/' | xargs)
+fi
 
 if [ -z "$LATEST_TAG" ]; then
-    echo "Failed to fetch latest release tag from $API_URL."
+    echo "Error: Could not detect the latest version. Please check your network or GH_PROXY."
     exit 1
 fi
+
+echo "Latest version detected: $LATEST_TAG"
 
 EXTENSION="tar.gz"
 FILENAME="sb-sync-${LATEST_TAG}-${OS}-${ARCH}.${EXTENSION}"
 URL="${GH_PROXY}https://github.com/${REPO}/releases/download/${LATEST_TAG}/${FILENAME}"
 
-echo "Downloading sb-sync ${LATEST_TAG} for ${OS}/${ARCH}..."
+echo "Downloading from: $URL"
 curl -L "$URL" -o "sb-sync.tar.gz"
 
 echo "Extracting..."
