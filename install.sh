@@ -17,11 +17,15 @@ REPO="kyeo-hub/sb-sync"
 GH_PROXY="${GH_PROXY:-}" 
 
 echo "Fetching latest version..."
-# Try to get the tag by following the redirect of the /releases/latest URL
-# This is more proxy-friendly than the GitHub API
-LATEST_TAG=$(curl -sI "${GH_PROXY}https://github.com/${REPO}/releases/latest" | grep -i location | awk -F'/' '{print $NF}' | tr -d '\r' | xargs)
+# 1. Try reading the VERSION file from raw.githubusercontent.com (most proxy-friendly)
+LATEST_TAG=$(curl -fsSL "${GH_PROXY}https://raw.githubusercontent.com/${REPO}/main/VERSION" | xargs)
 
-# Fallback to API if the redirect method fails (some proxies don't return Location header correctly)
+# 2. Fallback to redirect tracking
+if [ -z "$LATEST_TAG" ]; then
+    LATEST_TAG=$(curl -sI "${GH_PROXY}https://github.com/${REPO}/releases/latest" | grep -i location | awk -F'/' '{print $NF}' | tr -d '\r' | xargs)
+fi
+
+# 3. Fallback to API
 if [ -z "$LATEST_TAG" ] || [ "$LATEST_TAG" = "latest" ]; then
     LATEST_TAG=$(curl -s "https://api.github.com/repos/$REPO/releases/latest" | grep '"tag_name":' | sed -E 's/.*"([^"]+)".*/\1/' | xargs)
 fi
