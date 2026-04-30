@@ -2,6 +2,8 @@
 
 `sb-sync` is a lightweight, cross-platform CLI tool designed to automate the installation, configuration synchronization, and background management of [sing-box](https://github.com/SagerNet/sing-box).
 
+**English** | [中文说明](./README_ZH.md)
+
 ## ✨ Features
 
 - **🚀 One-Click Install/Update**: Automatically download and install the latest version of sing-box from GitHub.
@@ -13,9 +15,19 @@
 
 ## 📥 Installation
 
-Download the latest binary for your platform from the [Releases](https://github.com/kyeo-hub/sb-sync/releases) page.
+### Linux & macOS (Quick Install)
 
-Alternatively, build from source:
+Run the following command in your terminal to automatically download and install the latest version:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/kyeo-hub/sb-sync/main/install.sh | bash
+```
+
+### Windows
+
+Download the latest `.zip` file from the [Releases](https://github.com/kyeo-hub/sb-sync/releases) page, extract it, and place `sb-sync.exe` in your system's PATH.
+
+### Build from Source
 
 ```bash
 go install github.com/kyeo-hub/sb-sync@latest
