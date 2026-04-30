@@ -26,7 +26,7 @@ curl -fsSL https://raw.githubusercontent.com/kyeo-hub/sb-sync/main/install.sh | 
 **If you have trouble accessing GitHub, use the proxy command:**
 
 ```bash
-curl -fsSL https://ghproxy.com/https://raw.githubusercontent.com/kyeo-hub/sb-sync/main/install.sh | GH_PROXY=https://ghproxy.com/ bash
+curl -fsSL https://gh-proxy.com/https://raw.githubusercontent.com/kyeo-hub/sb-sync/main/install.sh | GH_PROXY=https://gh-proxy.com/ bash
 ```
 
 ### Windows

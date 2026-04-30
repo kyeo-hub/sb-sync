@@ -26,7 +26,7 @@ curl -fsSL https://raw.githubusercontent.com/kyeo-hub/sb-sync/main/install.sh | 
 **如果遇到 GitHub 访问困难，请使用国内加速命令：**
 
 ```bash
-curl -fsSL https://raw.gitmirror.com/kyeo-hub/sb-sync/main/install.sh | GH_PROXY=https://mirror.ghproxy.com/ bash
+curl -fsSL https://gh-proxy.com/https://raw.githubusercontent.com/kyeo-hub/sb-sync/main/install.sh | GH_PROXY=https://gh-proxy.com/ bash
 ```
 
 ### Windows
