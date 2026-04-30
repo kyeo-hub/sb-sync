@@ -14,11 +14,17 @@ type Config struct {
 		Password string `mapstructure:"password"`
 		FilePath string `mapstructure:"file_path"` // Path to config.json on WebDAV
 	} `mapstructure:"webdav"`
-	GithubProxy string `mapstructure:"github_proxy"`
-	InstallDir  string `mapstructure:"install_dir"`
+	GithubProxy  string `mapstructure:"github_proxy"`
+	InstallDir   string `mapstructure:"install_dir"`
+	SyncInterval int    `mapstructure:"sync_interval"` // In minutes
 }
 
 var AppConfig Config
+
+func GetConfigPath() string {
+	home, _ := os.UserHomeDir()
+	return filepath.Join(home, ".sb-sync", "config.json")
+}
 
 func Init() error {
 	home, err := os.UserHomeDir()
@@ -39,6 +45,7 @@ func Init() error {
 
 	viper.SetDefault("github_proxy", "https://ghproxy.com/")
 	viper.SetDefault("install_dir", filepath.Join(configDir, "bin"))
+	viper.SetDefault("sync_interval", 60)
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
@@ -54,6 +61,11 @@ func Init() error {
 		return err
 	}
 
+	// Ensure InstallDir is absolute
+	if !filepath.IsAbs(AppConfig.InstallDir) {
+		AppConfig.InstallDir = filepath.Join(configDir, AppConfig.InstallDir)
+	}
+
 	return nil
 }
 
@@ -61,5 +73,6 @@ func Save() error {
 	viper.Set("webdav", AppConfig.WebDAV)
 	viper.Set("github_proxy", AppConfig.GithubProxy)
 	viper.Set("install_dir", AppConfig.InstallDir)
+	viper.Set("sync_interval", AppConfig.SyncInterval)
 	return viper.WriteConfig()
 }

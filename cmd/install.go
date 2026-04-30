@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/spf13/cobra"
 	"sb-sync/pkg/config"
@@ -27,7 +26,6 @@ var installCmd = &cobra.Command{
 			fmt.Printf("Error: %v\n", err)
 			return
 		}
-		defer os.Remove(tmpFile)
 
 		fmt.Println("Extracting...")
 		err = downloader.ExtractBinary(tmpFile, config.AppConfig.InstallDir)

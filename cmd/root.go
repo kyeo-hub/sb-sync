@@ -8,9 +8,14 @@ import (
 	"sb-sync/pkg/config"
 )
 
+var (
+	Version = "dev"
+)
+
 var rootCmd = &cobra.Command{
-	Use:   "sb-sync",
-	Short: "A cross-platform sing-box installer and config synchronizer",
+	Use:     "sb-sync",
+	Short:   "A cross-platform sing-box installer and config synchronizer",
+	Version: Version,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if err := config.Init(); err != nil {
 			fmt.Printf("Error initializing config: %v\n", err)

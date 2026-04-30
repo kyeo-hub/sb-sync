@@ -85,6 +85,8 @@ func DownloadSingBox(version string) (string, error) {
 }
 
 func ExtractBinary(archivePath, destDir string) error {
+	defer os.Remove(archivePath) // Clean up temp file
+
 	if err := os.MkdirAll(destDir, 0755); err != nil {
 		return err
 	}
