@@ -1,57 +1,84 @@
-# sb-sync (Sing-Box Sync)
+# sb-sync
 
-一个跨平台的 sing-box 一键安装与配置同步工具，支持 Windows、macOS 和 Linux。
+`sb-sync` is a lightweight, cross-platform CLI tool designed to automate the installation, configuration synchronization, and background management of [sing-box](https://github.com/SagerNet/sing-box).
 
-## 主要流程
+## ✨ Features
 
-1.  **安装**: 下载并解压 `sing-box` 核心。
-2.  **配置**: 设置 WebDAV 凭据（支持 GitHub 代理）。
-3.  **同步**: 从 WebDAV 下载 `config.json`。
-4.  **服务**: 将 `sing-box` 注册为系统服务并后台运行。
+- **🚀 One-Click Install/Update**: Automatically download and install the latest version of sing-box from GitHub.
+- **🔄 Configuration Sync**: Seamlessly sync your sing-box configuration from any WebDAV server.
+- **🛡️ Atomic Updates**: Prevents configuration corruption during synchronization.
+- **⚙️ Service Management**: Install sing-box as a system service (Windows, Linux, macOS) with auto-restart on crash.
+- **🌐 Proxy Support**: Built-in support for GitHub proxies to speed up downloads in restricted regions.
+- **⏲️ Periodic Sync**: Background service automatically checks for configuration updates.
 
-## 使用说明
+## 📥 Installation
 
-### 1. 安装与初始化
-首先编译或下载 `sb-sync` 二进制文件。
+Download the latest binary for your platform from the [Releases](https://github.com/kyeo-hub/sb-sync/releases) page.
 
-```powershell
-# 安装 sing-box 核心
-.\sb-sync.exe install
+Alternatively, build from source:
+
+```bash
+go install github.com/kyeo-hub/sb-sync@latest
 ```
 
-### 2. 配置 WebDAV
-以坚果云为例：
+## 🛠️ Usage
 
-```powershell
-.\sb-sync.exe config set-dav --url "https://dav.jianguoyun.com/dav/" --user "你的邮箱" --pass "你的应用密码" --path "/path/to/your/config.json"
+### 1. Configure WebDAV
+First, set up your WebDAV credentials to sync your `config.json`:
+
+```bash
+sb-sync config set-dav --url https://your-webdav-server.com --user your_user --pass your_password --path /path/to/config.json
 ```
 
-*注意：如果下载 sing-box 缓慢，可以设置 GitHub 代理（默认为 https://ghproxy.com/）：*
-```powershell
-.\sb-sync.exe config set-proxy --url "https://mirror.ghproxy.com/"
+### 2. Configure GitHub Proxy (Optional)
+If you are in a region with slow access to GitHub, set a proxy:
+
+```bash
+sb-sync config set-proxy --url https://ghproxy.com/
 ```
 
-### 3. 同步配置
-```powershell
-.\sb-sync.exe sync
+### 3. Install sing-box
+Install the latest core:
+
+```bash
+sb-sync install
 ```
 
-### 4. 服务管理
-```powershell
-# 安装为系统服务
-.\sb-sync.exe service install
+### 4. Manage Service
+Install and start the background service:
 
-# 启动服务
-.\sb-sync.exe service start
-
-# 查看状态
-.\sb-sync.exe service status
+```bash
+sb-sync service install
+sb-sync service start
 ```
 
-## 项目结构
-- `main.go`: 程序入口
-- `cmd/`: CLI 命令定义 (Cobra)
-- `pkg/config/`: 配置读写逻辑 (Viper)
-- `pkg/downloader/`: sing-box 下载与解压逻辑
-- `pkg/sync/`: WebDAV 同步逻辑
-- `pkg/service/`: 跨平台服务管理逻辑 (kardianos/service)
+### 5. Check Status & Update
+```bash
+# Check service status
+sb-sync service status
+
+# Update sing-box to latest version
+sb-sync update
+
+# Show current configuration
+sb-sync config show
+```
+
+## ⚙️ Configuration Reference
+
+The configuration file is stored at `~/.sb-sync/config.yaml`.
+
+| Command | Description |
+|---------|-------------|
+| `config set-dav` | Set WebDAV server details |
+| `config set-proxy` | Set GitHub proxy URL |
+| `config set-interval` | Set sync frequency (minutes) |
+| `config show` | View current settings |
+
+## 🤝 Contributing
+
+Contributions are welcome! Please feel free to submit a Pull Request.
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
