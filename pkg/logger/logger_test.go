@@ -19,8 +19,8 @@ func TestLogEntry(t *testing.T) {
 
 func TestLevelNames(t *testing.T) {
 	testCases := []struct {
-		level   Level
-		name    string
+		level Level
+		name  string
 	}{
 		{DEBUG, "DEBUG"},
 		{INFO, "INFO"},
