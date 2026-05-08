@@ -12,6 +12,9 @@
 - **⚙️ Service Management**: Install sing-box as a system service (Windows, Linux, macOS) with auto-restart on crash.
 - **🌐 Proxy Support**: Built-in support for GitHub proxies to speed up downloads in restricted regions.
 - **⏲️ Periodic Sync**: Background service automatically checks for configuration updates.
+- **🔍 Health Check**: Built-in diagnostic tool to verify installation and configuration status.
+- **🧪 Dry-Run Mode**: Preview actions before executing them.
+- **💻 Shell Completion**: Support for Bash, Zsh, Fish, and PowerShell auto-completion.
 
 ## 📥 Installation
 
@@ -75,11 +78,56 @@ sb-sync service start
 # Check service status
 sb-sync service status
 
+# Restart the service
+sb-sync service restart
+
 # Update sing-box to latest version
 sb-sync update
 
 # Show current configuration
 sb-sync config show
+```
+
+### 6. Health Check
+Verify your installation and configuration:
+
+```bash
+# Run health check
+sb-sync doctor
+
+# Output in JSON format
+sb-sync doctor --json
+```
+
+### 7. Dry-Run Mode
+Preview actions before executing them:
+
+```bash
+# Preview installation
+sb-sync install --dry-run
+
+# Preview configuration sync
+sb-sync sync --dry-run
+
+# Preview update
+sb-sync update --dry-run
+```
+
+### 8. Shell Completion
+Enable auto-completion for your shell:
+
+```bash
+# Bash
+sb-sync completion bash > /etc/bash_completion.d/sb-sync
+
+# Zsh
+sb-sync completion zsh > "${fpath[1]}/_sb-sync"
+
+# Fish
+sb-sync completion fish > ~/.config/fish/completions/sb-sync.fish
+
+# PowerShell
+sb-sync completion powershell > sb-sync.ps1
 ```
 
 ## ⚙️ Configuration Reference
@@ -92,6 +140,40 @@ The configuration file is stored at `~/.sb-sync/config.yaml`.
 | `config set-proxy` | Set GitHub proxy URL |
 | `config set-interval` | Set sync frequency (minutes) |
 | `config show` | View current settings |
+
+### Environment Variables
+
+You can also configure using environment variables (prefix: `SB_SYNC_`):
+
+| Variable | Description |
+|----------|-------------|
+| `SB_SYNC_GITHUB_PROXY` | GitHub proxy URL |
+| `SB_SYNC_WEBDAV_URL` | WebDAV server URL |
+| `SB_SYNC_WEBDAV_USER` | WebDAV username |
+| `SB_SYNC_WEBDAV_PASS` | WebDAV password |
+| `SB_SYNC_WEBDAV_PATH` | Remote config file path |
+| `SB_SYNC_INSTALL_DIR` | Installation directory |
+| `SB_SYNC_SYNC_INTERVAL` | Sync interval (minutes) |
+
+## 🧰 Build from Source
+
+```bash
+# Clone the repository
+git clone https://github.com/kyeo-hub/sb-sync.git
+cd sb-sync
+
+# Build
+make build
+
+# Or use Go directly
+go build -o sb-sync .
+
+# Run tests
+make test
+
+# Run linting
+make lint
+```
 
 ## 🤝 Contributing
 
