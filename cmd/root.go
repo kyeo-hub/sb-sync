@@ -18,8 +18,12 @@ var rootCmd = &cobra.Command{
 	Version: Version,
 	PersistentPreRun: func(cmd *cobra.Command, args []string) {
 		if err := config.Init(); err != nil {
-			fmt.Printf("Error initializing config: %v\n", err)
+			fmt.Printf("[ERROR] Failed to initialize config: %v\n", err)
 			os.Exit(1)
+		}
+		config.LoadEnvOverrides()
+		if err := config.ValidateConfig(); err != nil {
+			fmt.Printf("[WARN] Config validation warning: %v\n", err)
 		}
 	},
 }
@@ -32,5 +36,4 @@ func Execute() {
 }
 
 func init() {
-	// Root flags if any
 }

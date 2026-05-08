@@ -12,6 +12,14 @@ import (
 	"sb-sync/pkg/sync"
 )
 
+type ServiceInterface interface {
+	Install() error
+	Uninstall() error
+	Start() error
+	Stop() error
+	Status() (string, error)
+}
+
 type program struct {
 	exit chan struct{}
 	cmd  *exec.Cmd
@@ -25,20 +33,16 @@ func (p *program) Start(s service.Service) error {
 
 func (p *program) run() {
 	configPath := config.GetConfigPath()
-	binPath := filepath.Join(config.AppConfig.InstallDir, "sing-box")
-	if filepath.Separator == '\\' {
-		binPath += ".exe"
-	}
+	binPath := config.GetSingBoxBinary()
 
-	// Initial sync
-	fmt.Println("Performing initial sync...")
+	fmt.Printf("%s Performing initial sync...\n", config.LogPrefixInfo)
 	if err := sync.SyncFromWebDAV(); err != nil {
-		fmt.Printf("Initial sync failed: %v\n", err)
+		fmt.Printf("%s Initial sync failed: %v\n", config.LogPrefixWarn, err)
 	}
 
 	interval := time.Duration(config.AppConfig.SyncInterval) * time.Minute
-	if interval < time.Minute {
-		interval = time.Hour // Default to 1 hour if interval is invalid
+	if interval < config.MinimumSyncInterval {
+		interval = config.DefaultSyncInterval
 	}
 	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
@@ -47,10 +51,10 @@ func (p *program) run() {
 		p.cmd = exec.Command(binPath, "run", "-c", configPath)
 		p.cmd.Stdout = os.Stdout
 		p.cmd.Stderr = os.Stderr
-		
+
 		if err := p.cmd.Start(); err != nil {
-			fmt.Printf("Failed to start sing-box: %v\n", err)
-			time.Sleep(10 * time.Second)
+			fmt.Printf("%s Failed to start sing-box: %v\n", config.LogPrefixError, err)
+			time.Sleep(config.RestartDelay)
 			continue
 		}
 
@@ -67,23 +71,23 @@ func (p *program) run() {
 			return
 		case err := <-done:
 			if err != nil {
-				fmt.Printf("sing-box exited with error: %v\n", err)
+				fmt.Printf("%s sing-box exited with error: %v\n", config.LogPrefixWarn, err)
 			}
-			fmt.Println("sing-box stopped. Restarting in 5 seconds...")
-			time.Sleep(5 * time.Second)
+			fmt.Printf("%s sing-box stopped. Restarting in %v...\n", config.LogPrefixInfo, config.RestartDelay)
+			time.Sleep(config.RestartDelay)
 		case <-ticker.C:
-			fmt.Println("Checking for config updates...")
+			fmt.Printf("%s Checking for config updates...\n", config.LogPrefixInfo)
 			if _, updated, err := sync.SyncFromWebDAVWithStatus(); err == nil {
 				if updated {
-					fmt.Println("Config updated, restarting sing-box...")
+					fmt.Printf("%s Config updated, restarting sing-box...\n", config.LogPrefixInfo)
 					if p.cmd != nil && p.cmd.Process != nil {
 						p.cmd.Process.Kill()
 					}
 				} else {
-					fmt.Println("Config is up to date.")
+					fmt.Printf("%s Config is up to date.\n", config.LogPrefixInfo)
 				}
 			} else {
-				fmt.Printf("Sync failed: %v\n", err)
+				fmt.Printf("%s Sync failed: %v\n", config.LogPrefixError, err)
 			}
 		}
 	}
@@ -91,6 +95,7 @@ func (p *program) run() {
 
 func (p *program) Stop(s service.Service) error {
 	close(p.exit)
+	time.Sleep(config.StopDelay)
 	if p.cmd != nil && p.cmd.Process != nil {
 		p.cmd.Process.Kill()
 	}
@@ -99,17 +104,53 @@ func (p *program) Stop(s service.Service) error {
 
 func GetServiceConfig() *service.Config {
 	return &service.Config{
-		Name:        "sb-sync-singbox",
-		DisplayName: "Sing-Box (sb-sync managed)",
-		Description: "Sing-Box proxy service managed by sb-sync",
+		Name:        config.ServiceName,
+		DisplayName: config.ServiceDisplayName,
+		Description: config.ServiceDescription,
 	}
 }
 
-func NewService() (service.Service, error) {
+func NewService() (ServiceInterface, error) {
 	prg := &program{}
 	s, err := service.New(prg, GetServiceConfig())
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to create service: %w", err)
 	}
-	return s, nil
+	return &serviceWrapper{s}, nil
+}
+
+type serviceWrapper struct {
+	s service.Service
+}
+
+func (w *serviceWrapper) Install() error {
+	return w.s.Install()
+}
+
+func (w *serviceWrapper) Uninstall() error {
+	return w.s.Uninstall()
+}
+
+func (w *serviceWrapper) Start() error {
+	return w.s.Start()
+}
+
+func (w *serviceWrapper) Stop() error {
+	return w.s.Stop()
+}
+
+func (w *serviceWrapper) Status() (string, error) {
+	status, err := w.s.Status()
+	if err != nil {
+		return "", fmt.Errorf("failed to get status: %w", err)
+	}
+	return fmt.Sprintf("%v", status), nil
+}
+
+func GetSingBoxBinaryPath() string {
+	binPath := filepath.Join(config.GetInstallDir(), "sing-box")
+	if filepath.Separator == '\\' {
+		binPath += ".exe"
+	}
+	return binPath
 }
