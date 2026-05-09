@@ -14,11 +14,19 @@ import (
 var (
 	autoImport  bool
 	autoMigrate bool
+	autoKill    bool
+	autoAll     bool
 )
 
 var autoCmd = &cobra.Command{
 	Use:   "auto",
-	Short: "Auto-detect existing sing-box installation and configure",
+	Short: "Auto-detect and migrate existing sing-box installation",
+	Long: `Auto-detect existing sing-box installation and optionally:
+  - Stop running sing-box processes
+  - Import configuration
+  - Setup sb-sync service
+
+This command helps migrate from manual sing-box installation to sb-sync managed service.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		runAutoDetect()
 	},
@@ -29,66 +37,139 @@ func runAutoDetect() {
 	fmt.Println()
 
 	detected := false
+	hasRunningProcess := false
 
 	if binary, version := detectSingBoxBinary(); binary != "" {
 		detected = true
 		fmt.Printf("[FOUND] sing-box binary: %s\n", binary)
 		fmt.Printf("[FOUND] Version: %s\n", version)
-		fmt.Println()
 
-		if autoImport {
-			config.AppConfig.InstallDir = filepath.Dir(binary)
-			config.Save()
-			fmt.Printf("[CONFIG] Updated install directory to: %s\n", filepath.Dir(binary))
-			fmt.Println()
+		if isProcessRunning(binary) {
+			hasRunningProcess = true
+			fmt.Printf("[FOUND] Process is running\n")
 		}
+		fmt.Println()
 	}
 
-	if configPath, configDir := detectConfigPath(); configPath != "" {
+	configPath, configDir := detectConfigPath()
+	if configPath != "" {
 		detected = true
 		fmt.Printf("[FOUND] Configuration file: %s\n", configPath)
 		if configDir != "" {
 			fmt.Printf("[FOUND] Config directory: %s\n", configDir)
 		}
-
-		if autoImport {
-			config.AppConfig.InstallDir = filepath.Dir(configPath)
-			config.Save()
-			fmt.Printf("[CONFIG] Updated config path\n")
-			fmt.Println()
-		}
+		fmt.Println()
 	}
 
-	if serviceName, serviceStatus := detectSystemdService(); serviceName != "" {
+	serviceName, serviceStatus := detectSystemdService()
+	if serviceName != "" {
 		detected = true
 		fmt.Printf("[FOUND] Systemd service: %s (%s)\n", serviceName, serviceStatus)
-		fmt.Println()
-
-		if autoMigrate {
-			fmt.Println("[ACTION] To migrate existing service to sb-sync:")
-			fmt.Println("  1. Stop existing service: sudo systemctl stop", serviceName)
-			fmt.Println("  2. sb-sync service restart")
-			fmt.Println("  3. Optionally disable old service: sudo systemctl disable", serviceName)
-			fmt.Println()
+		if serviceStatus == "active" {
+			hasRunningProcess = true
 		}
+		fmt.Println()
 	}
 
 	if !detected {
 		fmt.Println("[INFO] No existing sing-box installation detected.")
 		fmt.Println("[INFO] Run 'sb-sync install' to install sing-box.")
 		fmt.Println()
+		return
 	}
 
-	if autoImport && detected {
-		fmt.Println("=== Auto-configuration completed ===")
-		fmt.Println("Current configuration:")
-		fmt.Printf("  Install Dir: %s\n", config.AppConfig.InstallDir)
-		fmt.Printf("  Config Path: %s\n", config.AppConfig.InstallDir)
+	if hasRunningProcess && (autoKill || autoAll) {
+		fmt.Println("[ACTION] Stopping existing sing-box processes...")
+		killSingBoxProcesses()
 		fmt.Println()
-		fmt.Println("Next steps:")
+	}
+
+	if autoImport || autoAll {
+		fmt.Println("[ACTION] Importing configuration...")
+
+		if binary, _ := detectSingBoxBinary(); binary != "" {
+			binDir := filepath.Dir(binary)
+			if binDir != "." && binDir != "/" {
+				config.AppConfig.InstallDir = binDir
+			}
+		}
+
+		if configPath != "" {
+			config.AppConfig.InstallDir = filepath.Dir(configPath)
+		}
+
+		config.Save()
+		fmt.Printf("[CONFIG] Install directory set to: %s\n", config.AppConfig.InstallDir)
+		fmt.Printf("[CONFIG] Config path set to: %s\n", configPath)
+		fmt.Println()
+	}
+
+	if autoMigrate || autoAll {
+		if serviceName != "" && serviceStatus == "active" {
+			fmt.Println("[ACTION] Disabling systemd service...")
+			exec.Command("systemctl", "stop", serviceName).Run()
+			exec.Command("systemctl", "disable", serviceName).Run()
+			fmt.Printf("[INFO] Stopped and disabled %s\n", serviceName)
+			fmt.Println()
+		}
+	}
+
+	fmt.Println("=== Auto-migration completed ===")
+	fmt.Println()
+	fmt.Println("Current configuration:")
+	fmt.Printf("  Install Dir: %s\n", config.AppConfig.InstallDir)
+	fmt.Printf("  Config Path: %s\n", config.GetConfigPath())
+	fmt.Println()
+	fmt.Println("Next steps:")
+	if config.AppConfig.WebDAV.URL == "" {
 		fmt.Println("  1. Configure WebDAV: sb-sync config set-dav --url <url> --user <user> --pass <pass> --path <path>")
-		fmt.Println("  2. Sync config: sb-sync sync")
-		fmt.Println("  3. Manage service: sb-sync service [start|stop|restart|status]")
+	}
+	fmt.Println("  1. Sync config: sb-sync sync")
+	fmt.Println("  2. Start service: sb-sync service start")
+	fmt.Println("  3. Check status: sb-sync service status")
+}
+
+func isProcessRunning(binaryPath string) bool {
+	cmd := exec.Command("pgrep", "-f", filepath.Base(binaryPath))
+	output, err := cmd.Output()
+	if err != nil {
+		return false
+	}
+	return len(strings.TrimSpace(string(output))) > 0
+}
+
+func killSingBoxProcesses() {
+	patterns := []string{
+		"sing-box",
+	}
+
+	for _, pattern := range patterns {
+		cmd := exec.Command("pkill", "-f", pattern)
+		output, err := cmd.CombinedOutput()
+
+		if err == nil {
+			fmt.Printf("[INFO] Killed processes matching: %s\n", pattern)
+		} else if len(output) > 0 {
+			errStr := string(output)
+			if !strings.Contains(errStr, "no process found") && !strings.Contains(errStr, "No matching processes") {
+				fmt.Printf("[WARN] pkill output: %s\n", errStr)
+			}
+		}
+	}
+
+	pidFile := filepath.Join(config.GetInstallDir(), "sing-box.pid")
+	if _, err := os.Stat(pidFile); err == nil {
+		pidData, _ := os.ReadFile(pidFile)
+		var pid int
+		if _, err := fmt.Sscanf(string(pidData), "%d", &pid); err == nil {
+			proc, err := os.FindProcess(pid)
+			if err == nil {
+				proc.Kill()
+				proc.Wait()
+			}
+		}
+		os.Remove(pidFile)
+		fmt.Println("[INFO] Removed sb-sync PID file")
 	}
 }
 
@@ -274,7 +355,10 @@ func detectSystemdService() (string, string) {
 }
 
 func init() {
-	autoCmd.Flags().BoolVar(&autoImport, "import", false, "Auto-import detected configuration")
-	autoCmd.Flags().BoolVar(&autoMigrate, "migrate", false, "Show migration instructions")
+	autoCmd.Flags().BoolVar(&autoImport, "import", false, "Import detected configuration")
+	autoCmd.Flags().BoolVar(&autoMigrate, "migrate", false, "Stop and disable systemd service")
+	autoCmd.Flags().BoolVar(&autoKill, "kill", false, "Kill running sing-box processes")
+	autoCmd.Flags().BoolVar(&autoAll, "all", false, "Run all auto-migration steps (kill, import, migrate)")
+	autoCmd.MarkFlagsMutuallyExclusive("all", "import", "migrate", "kill")
 	rootCmd.AddCommand(autoCmd)
 }
