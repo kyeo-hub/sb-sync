@@ -19,8 +19,7 @@ func init() {
 }
 
 func printHelp() {
-	fmt.Println(`
-╔══════════════════════════════════════════════════════════════════╗
+	fmt.Print(`╔══════════════════════════════════════════════════════════════════╗
 ║                        sb-sync 使用帮助                          ║
 ╚══════════════════════════════════════════════════════════════════╝
 
@@ -37,7 +36,7 @@ func printHelp() {
       --user <user>    用户名
       --pass <pass>    密码
       --path <path>    配置文件路径
-  
+
   sb-sync config set-proxy --url <url>   设置 GitHub 代理
   sb-sync config set-interval <minutes>  设置自动同步间隔
   sb-sync config show                   显示当前配置
@@ -96,25 +95,4 @@ func printHelp() {
   项目地址: https://github.com/kyeo-hub/sb-sync
   sing-box: https://github.com/SagerNet/sing-box
 `)
-}
-
-func printUninstall() {
-	fmt.Println("=== sb-sync 卸载说明 ===")
-	fmt.Println()
-	fmt.Println("要完全卸载 sb-sync，请执行以下步骤:")
-	fmt.Println()
-	fmt.Println("1. 停止并卸载服务:")
-	fmt.Println("   sb-sync service stop")
-	fmt.Println("   sb-sync service uninstall")
-	fmt.Println()
-	fmt.Println("2. 删除安装目录:")
-	fmt.Println("   rm -rf ~/.sb-sync")
-	fmt.Println()
-	fmt.Println("3. 删除命令行工具:")
-	fmt.Println("   rm -f /usr/local/bin/sb-sync")
-	fmt.Println()
-	fmt.Println("4. (可选) 删除 shell 补全配置:")
-	fmt.Println("   rm -f /etc/bash_completion.d/sb-sync")
-	fmt.Println()
-	fmt.Println("注意: 这不会删除你的 sing-box 配置文件。")
 }
