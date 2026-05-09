@@ -59,6 +59,10 @@ func Init() error {
 	viper.SetDefault("github_proxy", GitHubProxyDefault)
 	viper.SetDefault("install_dir", filepath.Join(configDir, "bin"))
 	viper.SetDefault("sync_interval", 60)
+	viper.SetDefault("webdav.url", "")
+	viper.SetDefault("webdav.username", "")
+	viper.SetDefault("webdav.password", "")
+	viper.SetDefault("webdav.file_path", "")
 
 	if err := viper.ReadInConfig(); err != nil {
 		if _, ok := err.(viper.ConfigFileNotFoundError); !ok {
@@ -80,7 +84,10 @@ func Init() error {
 }
 
 func Save() error {
-	viper.Set("webdav", AppConfig.WebDAV)
+	viper.Set("webdav.url", AppConfig.WebDAV.URL)
+	viper.Set("webdav.username", AppConfig.WebDAV.Username)
+	viper.Set("webdav.password", AppConfig.WebDAV.Password)
+	viper.Set("webdav.file_path", AppConfig.WebDAV.FilePath)
 	viper.Set("github_proxy", AppConfig.GithubProxy)
 	viper.Set("install_dir", AppConfig.InstallDir)
 	viper.Set("sync_interval", AppConfig.SyncInterval)
