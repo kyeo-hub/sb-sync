@@ -73,7 +73,7 @@ sb-sync config set-dav --url https://your-webdav-server.com --user your_user --p
 If you are in a region with slow access to GitHub, set a proxy:
 
 ```bash
-sb-sync config set-proxy --url https://ghproxy.com/
+sb-sync config set-proxy --url https://gh-proxy.com/
 ```
 
 ### 4. Install sing-box

@@ -72,7 +72,7 @@ sb-sync config set-dav --url https://your-webdav-server.com --user your_user --p
 如果你在访问 GitHub 时速度较慢，可以设置下载代理：
 
 ```bash
-sb-sync config set-proxy --url https://ghproxy.com/
+sb-sync config set-proxy --url https://gh-proxy.com/
 ```
 
 ### 4. 安装 sing-box 内核

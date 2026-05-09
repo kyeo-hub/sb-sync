@@ -13,7 +13,7 @@ const (
 	MinimumSyncInterval  = 1 * time.Minute
 	VersionCheckInterval = 1 * time.Hour
 
-	GitHubProxyDefault = "https://ghproxy.com/"
+	GitHubProxyDefault = "https://gh-proxy.com/"
 	SingBoxRepoOwner   = "SagerNet"
 	SingBoxRepoName    = "sing-box"
 )

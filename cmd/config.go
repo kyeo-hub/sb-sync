@@ -99,7 +99,7 @@ func init() {
 	setDavCmd.Flags().String("pass", "", "WebDAV password")
 	setDavCmd.Flags().String("path", "", "Remote path to config.json")
 
-	setProxyCmd.Flags().String("url", "", "GitHub proxy URL (e.g. https://ghproxy.com/)")
+	setProxyCmd.Flags().String("url", "", "GitHub proxy URL (e.g. https://gh-proxy.com/)")
 
 	setIntervalCmd.Flags().Int("minutes", 60, "Sync interval in minutes")
 
