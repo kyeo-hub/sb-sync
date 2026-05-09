@@ -110,6 +110,12 @@ func removeManualService() {
 }
 
 func startService() {
+	installDir := config.GetInstallDir()
+	if err := os.MkdirAll(installDir, 0755); err != nil {
+		fmt.Printf("[ERROR] Failed to create install directory: %v\n", err)
+		return
+	}
+
 	pidFile := getPIDFile()
 
 	if _, err := os.Stat(pidFile); err == nil {
