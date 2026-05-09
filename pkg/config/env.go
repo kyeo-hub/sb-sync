@@ -12,6 +12,12 @@ const (
 )
 
 func LoadEnvOverrides() {
+	if val := os.Getenv("GH_PROXY"); val != "" {
+		AppConfig.GithubProxy = val
+	}
+	if val := os.Getenv("GITHUB_PROXY"); val != "" {
+		AppConfig.GithubProxy = val
+	}
 	if val := os.Getenv(envPrefix + "GITHUB_PROXY"); val != "" {
 		AppConfig.GithubProxy = val
 	}
