@@ -9,12 +9,13 @@
 - **🚀 One-Click Install/Update**: Automatically download and install the latest version of sing-box from GitHub.
 - **🔄 Configuration Sync**: Seamlessly sync your sing-box configuration from any WebDAV server.
 - **🛡️ Atomic Updates**: Prevents configuration corruption during synchronization.
-- **⚙️ Service Management**: Install sing-box as a system service (Windows, Linux, macOS) with auto-restart on crash.
+- **⚙️ Service Management**: Manage sing-box as a background service using PID file-based process management (no systemd required).
 - **🌐 Proxy Support**: Built-in support for GitHub proxies to speed up downloads in restricted regions.
 - **⏲️ Periodic Sync**: Background service automatically checks for configuration updates.
 - **🔍 Health Check**: Built-in diagnostic tool to verify installation and configuration status.
 - **🧪 Dry-Run Mode**: Preview actions before executing them.
 - **💻 Shell Completion**: Support for Bash, Zsh, Fish, and PowerShell auto-completion.
+- **🤖 Auto-Detection**: Automatically detect existing sing-box installations and configure accordingly.
 
 ## 📥 Installation
 
@@ -44,28 +45,50 @@ go install github.com/kyeo-hub/sb-sync@latest
 
 ## 🛠️ Usage
 
-### 1. Configure WebDAV
+### 1. Auto-Detect Existing Installation (New)
+
+If you already have sing-box installed, use the auto command to detect and configure:
+
+```bash
+# Detect existing installation
+sb-sync auto
+
+# Auto-import detected configuration
+sb-sync auto --import
+
+# Show service migration instructions
+sb-sync auto --migrate
+```
+
+### 2. Configure WebDAV
+
 First, set up your WebDAV credentials to sync your `config.json`:
 
 ```bash
 sb-sync config set-dav --url https://your-webdav-server.com --user your_user --pass your_password --path /path/to/config.json
 ```
 
-### 2. Configure GitHub Proxy (Optional)
+### 3. Configure GitHub Proxy (Optional)
+
 If you are in a region with slow access to GitHub, set a proxy:
 
 ```bash
 sb-sync config set-proxy --url https://ghproxy.com/
 ```
 
-### 3. Install sing-box
+### 4. Install sing-box
+
 Install the latest core:
 
 ```bash
 sb-sync install
+
+# Or preview with dry-run mode
+sb-sync install --dry-run
 ```
 
-### 4. Manage Service
+### 5. Manage Service
+
 Install and start the background service:
 
 ```bash
@@ -73,7 +96,8 @@ sb-sync service install
 sb-sync service start
 ```
 
-### 5. Check Status & Update
+### 6. Check Status & Update
+
 ```bash
 # Check service status
 sb-sync service status
@@ -84,11 +108,15 @@ sb-sync service restart
 # Update sing-box to latest version
 sb-sync update
 
+# Sync configuration
+sb-sync sync
+
 # Show current configuration
 sb-sync config show
 ```
 
-### 6. Health Check
+### 7. Health Check
+
 Verify your installation and configuration:
 
 ```bash
@@ -99,7 +127,8 @@ sb-sync doctor
 sb-sync doctor --json
 ```
 
-### 7. Dry-Run Mode
+### 8. Dry-Run Mode
+
 Preview actions before executing them:
 
 ```bash
@@ -113,7 +142,8 @@ sb-sync sync --dry-run
 sb-sync update --dry-run
 ```
 
-### 8. Shell Completion
+### 9. Shell Completion
+
 Enable auto-completion for your shell:
 
 ```bash
