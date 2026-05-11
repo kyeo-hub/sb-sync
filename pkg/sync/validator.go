@@ -71,10 +71,12 @@ func HealthCheck() HealthStatus {
 		status.ConfigExists = true
 	}
 
-	if config.AppConfig.WebDAV.URL != "" && config.AppConfig.WebDAV.FilePath != "" {
+	if config.AppConfig.WebDAV.URL != "" {
 		status.WebDAVConfigured = true
-		if err := CheckWebDAVConnection(); err == nil {
-			status.WebDAVReachable = true
+		if config.AppConfig.WebDAV.FilePath != "" {
+			if err := CheckWebDAVConnection(); err == nil {
+				status.WebDAVReachable = true
+			}
 		}
 	}
 
