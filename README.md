@@ -4,6 +4,17 @@
 
 **English** | [中文说明](./README_ZH.md)
 
+## ⚠️ Important Note
+
+**If you already have sing-box installed manually**, use `sb-sync auto --all` to automatically:
+
+- Detect existing installation paths
+- Stop running sing-box processes
+- Import existing configuration files
+- Disable original systemd services
+
+This prevents conflicts from multiple sing-box instances running simultaneously!
+
 ## ✨ Features
 
 - **🚀 One-Click Install/Update**: Automatically download and install the latest version of sing-box from GitHub.
@@ -15,7 +26,7 @@
 - **🔍 Health Check**: Built-in diagnostic tool to verify installation and configuration status.
 - **🧪 Dry-Run Mode**: Preview actions before executing them.
 - **💻 Shell Completion**: Support for Bash, Zsh, Fish, and PowerShell auto-completion.
-- **🤖 Auto-Detection**: Automatically detect existing sing-box installations and configure accordingly.
+- **🤖 Auto-Detection**: Automatically detect existing sing-box installations, stop old processes, avoid conflicts.
 
 ## 📥 Installation
 
@@ -45,119 +56,84 @@ go install github.com/kyeo-hub/sb-sync@latest
 
 ## 🛠️ Usage
 
-### 1. Auto-Detect Existing Installation (New)
-
-If you already have sing-box installed, use the auto command to detect and configure:
+### Scenario 1: Fresh Install (No sing-box on system)
 
 ```bash
-# Detect existing installation
-sb-sync auto
-
-# Auto-import detected configuration
-sb-sync auto --import
-
-# Show service migration instructions
-sb-sync auto --migrate
-```
-
-### 2. Configure WebDAV
-
-First, set up your WebDAV credentials to sync your `config.json`:
-
-```bash
-sb-sync config set-dav --url https://your-webdav-server.com --user your_user --pass your_password --path /path/to/config.json
-```
-
-### 3. Configure GitHub Proxy (Optional)
-
-If you are in a region with slow access to GitHub, set a proxy:
-
-```bash
-sb-sync config set-proxy --url https://gh-proxy.com/
-```
-
-### 4. Install sing-box
-
-Install the latest core:
-
-```bash
+# 1. Install sing-box
 sb-sync install
 
-# Or preview with dry-run mode
-sb-sync install --dry-run
+# 2. Configure WebDAV server
+sb-sync config set-dav --url https://your-webdav.com --user your_user --pass your_password --path /config.json
+
+# 3. Configure GitHub proxy (optional, recommended for China)
+sb-sync config set-proxy --url https://gh-proxy.com/
+
+# 4. Start service
+sb-sync service install
+sb-sync service start
+
+# 5. Check status
+sb-sync doctor
 ```
 
-### 5. Manage Service
+### Scenario 2: Migrate from Existing Installation (Recommended)
 
-Install and start the background service:
+If you already have sing-box installed, use one-command migration:
 
 ```bash
-sb-sync service install
+# Run all migration steps at once
+sb-sync auto --all
+```
+
+This will automatically:
+1. Detect existing sing-box installation
+2. Stop running processes
+3. Import configuration files
+4. Disable original systemd services
+
+Then start the new service:
+```bash
 sb-sync service start
 ```
 
-### 6. Check Status & Update
+### Scenario 3: Step-by-Step Migration
+
+If you prefer granular control:
+
+```bash
+# 1. See what is detected
+sb-sync auto
+
+# 2. Stop old processes only
+sb-sync auto --kill
+
+# 3. Import config only
+sb-sync auto --import
+
+# 4. Disable systemd service only
+sb-sync auto --migrate
+```
+
+## 💡 Daily Usage
 
 ```bash
 # Check service status
 sb-sync service status
 
-# Restart the service
-sb-sync service restart
-
-# Update sing-box to latest version
-sb-sync update
-
-# Sync configuration
+# Sync latest configuration
 sb-sync sync
 
-# Show current configuration
-sb-sync config show
-```
+# Test network connection
+sb-sync test
 
-### 7. Health Check
-
-Verify your installation and configuration:
-
-```bash
-# Run health check
+# Health check
 sb-sync doctor
 
-# Output in JSON format
-sb-sync doctor --json
-```
+# Restart service
+sb-sync service restart
 
-### 8. Dry-Run Mode
-
-Preview actions before executing them:
-
-```bash
-# Preview installation
-sb-sync install --dry-run
-
-# Preview configuration sync
-sb-sync sync --dry-run
-
-# Preview update
-sb-sync update --dry-run
-```
-
-### 9. Shell Completion
-
-Enable auto-completion for your shell:
-
-```bash
-# Bash
-sb-sync completion bash > /etc/bash_completion.d/sb-sync
-
-# Zsh
-sb-sync completion zsh > "${fpath[1]}/_sb-sync"
-
-# Fish
-sb-sync completion fish > ~/.config/fish/completions/sb-sync.fish
-
-# PowerShell
-sb-sync completion powershell > sb-sync.ps1
+# Update sing-box
+sb-sync update
 ```
 
 ## ⚙️ Configuration Reference
@@ -173,36 +149,34 @@ The configuration file is stored at `~/.sb-sync/config.yaml`.
 
 ### Environment Variables
 
-You can also configure using environment variables (prefix: `SB_SYNC_`):
-
 | Variable | Description |
 |----------|-------------|
-| `SB_SYNC_GITHUB_PROXY` | GitHub proxy URL |
 | `SB_SYNC_WEBDAV_URL` | WebDAV server URL |
 | `SB_SYNC_WEBDAV_USER` | WebDAV username |
 | `SB_SYNC_WEBDAV_PASS` | WebDAV password |
-| `SB_SYNC_WEBDAV_PATH` | Remote config file path |
-| `SB_SYNC_INSTALL_DIR` | Installation directory |
-| `SB_SYNC_SYNC_INTERVAL` | Sync interval (minutes) |
+| `SB_SYNC_WEBDAV_PATH` | WebDAV config file path |
+| `SB_SYNC_GITHUB_PROXY` | GitHub proxy URL |
+| `GH_PROXY` / `GITHUB_PROXY` | Proxy URL (compatible) |
 
-## 🧰 Build from Source
+### Default Paths
+
+| Path | Description |
+|------|-------------|
+| `~/.sb-sync/` | Installation directory |
+| `~/.sb-sync/config.yaml` | sb-sync config file |
+| `~/.sb-sync/bin/sing-box` | sing-box binary |
+| `~/.sb-sync/config.json` | sing-box config |
+| `~/.sb-sync/sing-box.log` | Log file |
+| `~/.sb-sync/sing-box.pid` | PID file |
+
+## 🗑️ Uninstall
 
 ```bash
-# Clone the repository
-git clone https://github.com/kyeo-hub/sb-sync.git
-cd sb-sync
+# Uninstall sb-sync (keep config)
+sb-sync uninstall --keep-config
 
-# Build
-make build
-
-# Or use Go directly
-go build -o sb-sync .
-
-# Run tests
-make test
-
-# Run linting
-make lint
+# Complete uninstall (including config)
+sb-sync uninstall
 ```
 
 ## 🤝 Contributing

@@ -4,6 +4,16 @@
 
 [English](./README.md) | **中文说明**
 
+## ⚠️ 重要说明
+
+**如果你已经手动安装了 sing-box**，使用 `sb-sync auto --all` 可以一键完成：
+- 自动检测现有安装位置
+- 停止正在运行的 sing-box 进程
+- 导入现有配置文件
+- 禁用原有的 systemd 服务
+
+这样可以避免多个 sing-box 实例同时运行造成的冲突！
+
 ## ✨ 功能特性
 
 - **🚀 一键安装/更新**：自动从 GitHub 下载并安装最新版本的 sing-box 内核。
@@ -14,7 +24,7 @@
 - **⏲️ 定期同步**：后台服务会根据设定的间隔自动检查并更新 WebDAV 上的配置。
 - **🔍 健康检查**：内置诊断工具，验证安装和配置状态。
 - **🧪 模拟模式**：在执行前预览操作内容。
-- **🤖 自动检测**：自动检测现有 sing-box 安装并配置。
+- **🤖 自动检测**：自动检测现有 sing-box 安装，自动停止旧进程，避免冲突。
 
 ## 📥 快速安装
 
@@ -44,82 +54,84 @@ go install github.com/kyeo-hub/sb-sync@latest
 
 ## 🛠️ 使用教程
 
-### 1. 自动检测现有安装（新增）
-
-如果你已经安装了 sing-box，可以使用 auto 命令自动检测并配置：
+### 场景一：首次安装（机器上没有 sing-box）
 
 ```bash
-# 检测现有安装
-sb-sync auto
-
-# 自动导入检测到的配置
-sb-sync auto --import
-
-# 显示服务迁移说明
-sb-sync auto --migrate
-```
-
-### 2. 配置 WebDAV
-
-配置你的 WebDAV 服务器信息以便同步 `config.json`：
-
-```bash
-sb-sync config set-dav --url https://your-webdav-server.com --user your_user --pass your_password --path /path/to/config.json
-```
-
-### 3. 配置 GitHub 代理 (可选)
-
-如果你在访问 GitHub 时速度较慢，可以设置下载代理：
-
-```bash
-sb-sync config set-proxy --url https://gh-proxy.com/
-```
-
-### 4. 安装 sing-box 内核
-
-下载并安装最新的 sing-box 二进制文件：
-
-```bash
+# 1. 安装 sing-box 内核
 sb-sync install
 
-# 或者使用模拟模式预览安装
-sb-sync install --dry-run
+# 2. 配置 WebDAV 服务器
+sb-sync config set-dav --url https://your-webdav.com --user your_user --pass your_password --path /config.json
+
+# 3. 配置 GitHub 代理（国内用户可选）
+sb-sync config set-proxy --url https://gh-proxy.com/
+
+# 4. 启动服务
+sb-sync service install
+sb-sync service start
+
+# 5. 检查状态
+sb-sync doctor
 ```
 
-### 5. 服务管理
+### 场景二：从现有安装迁移（推荐）
 
-将 sing-box 安装为系统后台服务并启动：
+如果你的机器上已经安装了 sing-box，直接使用一键迁移：
 
 ```bash
-sb-sync service install
+# 一键完成所有迁移步骤
+sb-sync auto --all
+```
+
+这会自动：
+1. 检测现有 sing-box 安装位置
+2. 停止正在运行的旧进程
+3. 导入配置文件
+4. 禁用原有的 systemd 服务
+
+然后启动新服务：
+```bash
 sb-sync service start
 ```
 
-### 6. 状态检查与更新
+### 场景三：分步迁移
+
+如果你想逐步控制，可以使用以下命令：
 
 ```bash
-# 查看服务运行状态
+# 1. 先看看检测到什么
+sb-sync auto
+
+# 2. 只停止旧进程
+sb-sync auto --kill
+
+# 3. 只导入配置
+sb-sync auto --import
+
+# 4. 只禁用 systemd 服务
+sb-sync auto --migrate
+```
+
+## 💡 日常使用
+
+```bash
+# 查看服务状态
 sb-sync service status
+
+# 同步最新配置
+sb-sync sync
+
+# 测试网络连接
+sb-sync test
+
+# 健康检查
+sb-sync doctor
 
 # 重启服务
 sb-sync service restart
 
-# 检查并更新 sing-box 到最新版本
+# 更新 sing-box
 sb-sync update
-
-# 同步配置
-sb-sync sync
-
-# 显示当前配置信息
-sb-sync config show
-```
-
-### 7. 健康检查
-
-验证安装和配置状态：
-
-```bash
-sb-sync doctor
 ```
 
 ## ⚙️ 配置说明
@@ -132,6 +144,38 @@ sb-sync doctor
 | `config set-proxy` | 设置 GitHub 代理地址 |
 | `config set-interval` | 设置自动同步频率（单位：分钟） |
 | `config show` | 查看当前所有配置 |
+
+### 环境变量
+
+| 变量 | 说明 |
+|------|------|
+| `SB_SYNC_WEBDAV_URL` | WebDAV 地址 |
+| `SB_SYNC_WEBDAV_USER` | WebDAV 用户名 |
+| `SB_SYNC_WEBDAV_PASS` | WebDAV 密码 |
+| `SB_SYNC_WEBDAV_PATH` | WebDAV 配置文件路径 |
+| `SB_SYNC_GITHUB_PROXY` | GitHub 代理地址 |
+| `GH_PROXY` / `GITHUB_PROXY` | 代理地址（兼容） |
+
+### 默认路径
+
+| 路径 | 说明 |
+|------|------|
+| `~/.sb-sync/` | 安装目录 |
+| `~/.sb-sync/config.yaml` | sb-sync 配置文件 |
+| `~/.sb-sync/bin/sing-box` | sing-box 二进制文件 |
+| `~/.sb-sync/config.json` | sing-box 配置 |
+| `~/.sb-sync/sing-box.log` | 日志文件 |
+| `~/.sb-sync/sing-box.pid` | PID 文件 |
+
+## 🗑️ 卸载
+
+```bash
+# 卸载 sb-sync（保留配置）
+sb-sync uninstall --keep-config
+
+# 完全卸载（包括配置）
+sb-sync uninstall
+```
 
 ## 🤝 参与贡献
 
